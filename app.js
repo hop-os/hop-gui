@@ -135,7 +135,7 @@ const app = {
         $('error').innerHTML = '';
         this.setSseStatus(true); // clear any stale SSE banner; connect will repopulate
         const message = this.clusters.length ? `${spinner}Connecting to cluster…` : 'Add a cluster to get started.';
-        document.querySelector('#agentsTable tbody').innerHTML = `<tr><td colspan="8" class="empty">${message}</td></tr>`;
+        document.querySelector('#agentsTable tbody').innerHTML = `<tr><td colspan="9" class="empty">${message}</td></tr>`;
         document.querySelector('#jobsTable tbody').innerHTML = `<tr><td colspan="6" class="empty">${message}</td></tr>`;
         clearInterval(this.detailTimer);
         this.activeJobId = null;
@@ -500,9 +500,12 @@ const app = {
         return cpu === '-' && mem === '-' ? '-' : `<div class="system-usage">${cpu}${mem}</div>`;
     },
 
+    // renderAgentsTable: een HopOS-node (hij meldt kern_ram_bytes) krijgt ook
+    // de Logs-knop van zijn console, de systeemtaak kern
+    // (/v1/agents/<id>/logs/kern/stdout), net als die van een taak.
     renderAgentsTable() {
         const tbody = document.querySelector('#agentsTable tbody');
-        if (!this.agents.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty">No agents</td></tr>'; return; }
+        if (!this.agents.length) { tbody.innerHTML = '<tr><td colspan="9" class="empty">No agents</td></tr>'; return; }
         tbody.innerHTML = [...this.agents].sort((a, b) => a.id.localeCompare(b.id)).map(a => {
             const cap = this.capacityByEndpoint[a.endpoint];
             const cpu = cap ? this.meter(cap.cpu_used_shares, cap.cpu_cores * 1024,
@@ -520,6 +523,7 @@ const app = {
                 <td data-label="System">${this.formatSystem(a)}</td>
                 <td data-label="Temp">${this.formatTemp(a.temp_milli_c)}</td>
                 <td data-label="Tasks">${cap ? cap.tasks_running : '-'}</td>
+                <td class="mobile-actions">${a.kern_ram_bytes ? `<button type="button" class="t-action" data-log-task="kern" data-log-agent="${this._esc(a.id)}" data-log-endpoint="${this._esc(a.endpoint || '')}">${icon('terminal')}Logs</button>` : ''}</td>
             </tr>`;
         }).join('');
     },
